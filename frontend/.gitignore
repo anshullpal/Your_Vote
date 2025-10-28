@@ -1,0 +1,34 @@
+Dependencies
+
+/node_modules
+/.pnp
+.pnp.js
+
+Next.js build output
+
+/.next/
+/out/
+
+Production artifacts
+
+/build
+/dist
+
+dotenv files
+
+.env*.local
+
+Logs
+
+npm-debug.log*
+yarn-debug.log*
+.npm
+.yarn
+
+Dependency lock file for pnpm (if used)
+
+pnpm-lock.yaml
+
+macOS trash files
+
+.DS_Store
