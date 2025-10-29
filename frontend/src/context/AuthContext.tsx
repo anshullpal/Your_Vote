@@ -5,9 +5,13 @@ import api from '@/utils/api';
 
 interface AuthContextType {
   user: any;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  isVoter: boolean;
+  isAdmin: boolean;
   setUser: (user: any) => void;
   initializeAuth: () => Promise<void>;
-  fetchUserProfile: () => Promise<void>; // ✅ added
+  fetchUserProfile: () => Promise<void>;
   logout: () => void;
 }
 
@@ -15,40 +19,60 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<any>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Called after login/signup to refresh the user info
   const initializeAuth = async () => {
+    setIsLoading(true);
     try {
       const token = localStorage.getItem('token');
-      if (!token) return;
+      if (!token) {
+        setUser(null);
+        setIsAuthenticated(false);
+        return;
+      }
 
-      const response = await api.get('/user/profile'); // <-- Adjust to your API route
+      const response = await api.get('/user/profile');
+      console.log('✅ Profile loaded:', response.data);
       setUser(response.data);
+      setIsAuthenticated(true);
     } catch (error) {
-      console.error('Auth initialization failed:', error);
+      console.warn('Auth check failed:', error);
+      localStorage.removeItem('token');
       setUser(null);
+      setIsAuthenticated(false);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // ✅ Added: Alias so signup page can use fetchUserProfile()
   const fetchUserProfile = initializeAuth;
 
   const logout = () => {
     localStorage.removeItem('token');
     setUser(null);
+    setIsAuthenticated(false);
   };
 
   useEffect(() => {
-    initializeAuth(); // load user on mount
+    initializeAuth();
   }, []);
+
+  // Derived role flags ✅
+  const isVoter = user?.role === 'voter';
+  const isAdmin = user?.role === 'admin';
 
   return (
     <AuthContext.Provider
       value={{
         user,
+        isAuthenticated,
+        isLoading,
+        isVoter,
+        isAdmin,
         setUser,
         initializeAuth,
-        fetchUserProfile, // ✅ added
+        fetchUserProfile,
         logout,
       }}
     >
